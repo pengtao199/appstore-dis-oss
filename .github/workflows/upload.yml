@@ -1,0 +1,118 @@
+name: Secure Release Upload
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Tag of the temporary release containing package.ipa/AuthKey.p8"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  appstore_upload:
+    runs-on: macos-latest
+    env:
+      RELEASE_TAG: ${{ github.event.inputs.release_tag }}
+      API_URL: https://api.github.com/repos/${{ github.repository }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download release assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "[progress] Downloading release assets"
+          mkdir -p delivery_box
+
+          curl -fsSL \
+            -H "Authorization: Bearer ${{ github.token }}" \
+            -H "Accept: application/vnd.github+json" \
+            "$API_URL/releases/tags/$RELEASE_TAG" \
+            -o release.json
+
+          release_id=$(jq -r '.id // empty' release.json)
+          if [[ -z "$release_id" ]]; then
+            echo "release_tag not found: $RELEASE_TAG" >&2
+            exit 1
+          fi
+
+          echo "RELEASE_ID=$release_id" >> "$GITHUB_ENV"
+          echo "[progress] Release ID: $release_id"
+
+          for file in package.ipa AuthKey.p8 issuer_id.txt key_id.txt; do
+            asset_url=$(jq -r --arg name "$file" '.assets[] | select(.name == $name) | .url' release.json)
+            if [[ -z "$asset_url" || "$asset_url" == "null" ]]; then
+              echo "missing asset: $file" >&2
+              exit 1
+            fi
+
+            curl -fsSL \
+              -H "Authorization: Bearer ${{ github.token }}" \
+              -H "Accept: application/octet-stream" \
+              "$asset_url" \
+              -o "delivery_box/$file"
+            echo "[progress] Downloaded: $file"
+          done
+
+      - name: Configure Apple API key
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "[progress] Configuring Apple API key"
+          KEY_ID=$(tr -d '\r\n' < delivery_box/key_id.txt)
+          ISSUER_ID=$(tr -d '\r\n' < delivery_box/issuer_id.txt)
+
+          mkdir -p ~/.private_keys
+          cp delivery_box/AuthKey.p8 ~/.private_keys/AuthKey_${KEY_ID}.p8
+
+          echo "KEY_ID=$KEY_ID" >> "$GITHUB_ENV"
+          echo "ISSUER_ID=$ISSUER_ID" >> "$GITHUB_ENV"
+          echo "[progress] Key and issuer loaded"
+
+      - name: Upload to App Store Connect
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "[progress] Uploading IPA to App Store Connect"
+          xcrun altool --upload-app \
+            --type ios \
+            --file delivery_box/package.ipa \
+            --apiKey "${KEY_ID}" \
+            --apiIssuer "${ISSUER_ID}"
+          echo "[progress] Upload command finished"
+
+      - name: Cleanup release and sensitive files
+        if: always()
+        shell: bash
+        run: |
+          set +e
+          echo "[progress] Cleaning temporary files"
+
+          rm -rf delivery_box release.json
+          rm -f ~/.private_keys/AuthKey_*.p8
+
+          release_id="${RELEASE_ID:-}"
+          if [[ -z "$release_id" ]]; then
+            release_id=$(curl -fsSL \
+              -H "Authorization: Bearer ${{ github.token }}" \
+              -H "Accept: application/vnd.github+json" \
+              "$API_URL/releases/tags/$RELEASE_TAG" | jq -r '.id // empty')
+          fi
+
+          if [[ -n "$release_id" ]]; then
+            curl -fsSL -X DELETE \
+              -H "Authorization: Bearer ${{ github.token }}" \
+              -H "Accept: application/vnd.github+json" \
+              "$API_URL/releases/$release_id"
+            echo "[progress] Deleted temporary release: $release_id"
+          fi
+
+          curl -fsSL -X DELETE \
+            -H "Authorization: Bearer ${{ github.token }}" \
+            -H "Accept: application/vnd.github+json" \
+            "$API_URL/git/refs/tags/$RELEASE_TAG"
+          echo "[progress] Deleted temporary tag: $RELEASE_TAG"
