@@ -104,3 +104,25 @@ chmod +x bootstrap.sh deploy.sh
 GitHub Actions runner：
 
 - `macos-latest`（已在 workflow 中设置）
+
+## WSL support (Windows)
+
+支持在 Windows 的 WSL 环境中使用（推荐 `Ubuntu on WSL2`）。
+
+1. 在 WSL 安装依赖：
+
+```bash
+sudo apt update
+sudo apt install -y bash curl jq git
+```
+
+2. 按普通 Linux 步骤执行：
+
+```bash
+./bootstrap.sh
+./deploy.sh
+```
+
+3. 路径输入支持两种格式（脚本会自动转换）：
+- Linux 路径：`/mnt/c/Users/you/Desktop/app.ipa`
+- Windows 路径：`C:\Users\you\Desktop\app.ipa`

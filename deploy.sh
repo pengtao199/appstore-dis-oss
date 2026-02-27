@@ -56,6 +56,28 @@ trim_value() {
   printf '%s' "$v"
 }
 
+is_wsl() {
+  [[ -n "${WSL_DISTRO_NAME:-}" ]] && return 0
+  [[ -f /proc/version ]] && grep -qi "microsoft" /proc/version && return 0
+  return 1
+}
+
+normalize_local_path() {
+  local raw drive rest
+  raw="$(trim_value "$1")"
+
+  # WSL users often paste paths like C:\Users\name\file.ipa
+  if is_wsl && [[ "$raw" =~ ^([A-Za-z]):\\ ]]; then
+    drive="$(printf '%s' "${BASH_REMATCH[1]}" | tr '[:upper:]' '[:lower:]')"
+    rest="${raw:2}"
+    rest="${rest//\\//}"
+    printf '/mnt/%s%s' "$drive" "$rest"
+    return
+  fi
+
+  printf '%s' "$raw"
+}
+
 ensure_storage() {
   mkdir -p "$PROFILES_DIR"
   if [[ ! -f "$ACCOUNTS_FILE" ]]; then
@@ -188,7 +210,7 @@ create_account_interactive() {
 
   while true; do
     p8_path="$(read_required '4) P8 path (drag into terminal): ')"
-    p8_path="$(trim_value "$p8_path")"
+    p8_path="$(normalize_local_path "$p8_path")"
     if [[ -f "$p8_path" ]]; then
       break
     fi
@@ -248,6 +270,7 @@ select_saved_account_interactive() {
     SELECTED_ISSUER_ID="$(printf '%s' "$account_json" | jq -r '.issuer_id')"
     SELECTED_KEY_ID="$(printf '%s' "$account_json" | jq -r '.key_id')"
     SELECTED_P8_PATH="$(printf '%s' "$account_json" | jq -r '.p8_path')"
+    SELECTED_P8_PATH="$(normalize_local_path "$SELECTED_P8_PATH")"
     [[ -f "$SELECTED_P8_PATH" ]] || die "Saved p8 not found: $SELECTED_P8_PATH"
     break
   done
@@ -298,6 +321,7 @@ load_profile_by_name() {
   SELECTED_ISSUER_ID="$(printf '%s' "$account_json" | jq -r '.issuer_id')"
   SELECTED_KEY_ID="$(printf '%s' "$account_json" | jq -r '.key_id')"
   SELECTED_P8_PATH="$(printf '%s' "$account_json" | jq -r '.p8_path')"
+  SELECTED_P8_PATH="$(normalize_local_path "$SELECTED_P8_PATH")"
   [[ -f "$SELECTED_P8_PATH" ]] || die "p8 not found: $SELECTED_P8_PATH"
 }
 
@@ -305,7 +329,7 @@ prompt_ipa_interactive() {
   local ipa_input
   printf '\nDrag the IPA file into terminal and press enter:\n' >&2
   read -r ipa_input
-  ipa_input="$(trim_value "$ipa_input")"
+  ipa_input="$(normalize_local_path "$ipa_input")"
   [[ -n "$ipa_input" ]] || die "ipa path is empty"
   [[ -f "$ipa_input" ]] || die "ipa not found: $ipa_input"
   printf '%s' "$ipa_input"
@@ -487,7 +511,7 @@ if [[ -z "$PROFILE" && ${#POSITIONAL[@]} -eq 0 ]]; then
 else
   [[ -n "$PROFILE" ]] || die "missing required option: --profile <name> (or run ./deploy.sh for interactive mode)"
   (( ${#POSITIONAL[@]} >= 1 )) || die "profile mode requires <ipa_path>"
-  IPA_PATH="$(trim_value "${POSITIONAL[0]}")"
+  IPA_PATH="$(normalize_local_path "${POSITIONAL[0]}")"
   [[ -n "$IPA_PATH" ]] || die "ipa path is empty"
   [[ -f "$IPA_PATH" ]] || die "ipa not found: $IPA_PATH"
 
