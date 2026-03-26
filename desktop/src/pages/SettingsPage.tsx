@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { ProfileEditor } from "../components/ProfileEditor";
+import { useI18n } from "../i18n/I18nProvider";
 import { pickFile } from "../lib/api";
 import type { Profile, RepoCheckResult } from "../lib/types";
 
@@ -42,6 +43,7 @@ export function SettingsPage({
   onCheckRepo,
   onSaveProfiles,
 }: Props) {
+  const { t } = useI18n();
   const [draft, setDraft] = useState<Profile>(emptyProfile);
   const [editingName, setEditingName] = useState<string | null>(null);
 
@@ -104,46 +106,46 @@ export function SettingsPage({
       <section className="panel">
         <div className="section-header">
           <div>
-            <p className="eyebrow">Repository</p>
-            <h3>GitHub and script settings</h3>
+            <p className="eyebrow">{t.settings.eyebrow}</p>
+            <h3>{t.settings.title}</h3>
           </div>
         </div>
         <div className="grid two">
           <label>
-            <span>Repository</span>
+            <span>{t.settings.repo}</span>
             <input
               value={repo}
               onChange={(event) => onRepoChange(event.target.value)}
-              placeholder="owner/repo"
+              placeholder={t.settings.repoPlaceholder}
             />
           </label>
           <label>
-            <span>Branch</span>
+            <span>{t.settings.branch}</span>
             <input
               value={branch}
               onChange={(event) => onBranchChange(event.target.value)}
-              placeholder="main"
+              placeholder={t.settings.branchPlaceholder}
             />
           </label>
         </div>
         <label>
-          <span>GitHub token</span>
+          <span>{t.settings.token}</span>
           <input
             type="password"
             value={githubToken}
             onChange={(event) => onTokenChange(event.target.value)}
-            placeholder="repo + workflow scopes"
+            placeholder={t.settings.tokenPlaceholder}
           />
         </label>
         <div className="actions">
           <button type="button" className="secondary" onClick={() => void onSaveSettings()}>
-            Save settings
+            {t.settings.saveSettings}
           </button>
           <button type="button" className="secondary" onClick={() => void onCheckRepo()}>
-            Test connection
+            {t.settings.testConnection}
           </button>
           <button type="button" onClick={() => void onRunBootstrap()} disabled={busy}>
-            Initialize repo
+            {t.settings.initializeRepo}
           </button>
         </div>
         {repoCheck ? (
@@ -156,13 +158,13 @@ export function SettingsPage({
       <section className="panel">
         <div className="section-header">
           <div>
-            <p className="eyebrow">Profiles</p>
-            <h3>Apple API profiles</h3>
+            <p className="eyebrow">{t.settings.profilesEyebrow}</p>
+            <h3>{t.settings.profilesTitle}</h3>
           </div>
         </div>
         <div className="profile-list">
           {profiles.length === 0 ? (
-            <p className="muted">No saved profiles yet.</p>
+            <p className="muted">{t.settings.noProfiles}</p>
           ) : (
             profiles.map((profile) => (
               <article key={profile.name} className="profile-card">
@@ -176,14 +178,14 @@ export function SettingsPage({
                     className="secondary"
                     onClick={() => handleEdit(profile)}
                   >
-                    Edit
+                    {t.common.edit}
                   </button>
                   <button
                     type="button"
                     className="ghost"
                     onClick={() => void handleDelete(profile.name)}
                   >
-                    Delete
+                    {t.common.delete}
                   </button>
                 </div>
               </article>

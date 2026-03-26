@@ -111,6 +111,26 @@ select {
   background: rgba(255, 255, 255, 0.04);
 }
 
+.language-switcher {
+  display: grid;
+  gap: 0.6rem;
+  margin-top: 1.5rem;
+}
+
+.language-switcher span {
+  font-size: 0.8rem;
+  color: rgba(247, 244, 237, 0.7);
+}
+
+.language-actions {
+  display: flex;
+  gap: 0.6rem;
+}
+
+.tab.compact {
+  padding: 0.65rem 0.85rem;
+}
+
 .page-grid {
   display: grid;
   gap: 1.25rem;

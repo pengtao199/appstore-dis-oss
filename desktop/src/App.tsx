@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import { useI18n } from "./i18n/I18nProvider";
 import {
   checkRepoAccess,
   fetchRecentRun,
@@ -27,6 +28,7 @@ import { UploadPage } from "./pages/UploadPage";
 type Tab = "settings" | "upload";
 
 export default function App() {
+  const { locale, setLocale, t } = useI18n();
   const [activeTab, setActiveTab] = useState<Tab>("settings");
   const [repo, setRepo] = useState("");
   const [branch, setBranch] = useState("main");
@@ -94,7 +96,7 @@ export default function App() {
   const handleSaveSettings = async () => {
     await saveSettings(repo.trim(), branch.trim() || "main");
     await persistAppConfig({ githubToken });
-    setNotice("Settings saved.");
+    setNotice(t.settings.settingsSaved);
   };
 
   const handleSaveProfiles = async (nextProfiles: Profile[]) => {
@@ -103,10 +105,14 @@ export default function App() {
     if (!selectedProfile && nextProfiles.length > 0) {
       setSelectedProfile(nextProfiles[0].name);
     }
-    setNotice("Profiles saved.");
+    setNotice(t.settings.profilesSaved);
   };
 
   const handleCheckRepo = async () => {
+    if (!repo.trim() || !githubToken.trim()) {
+      setNotice(t.settings.repoTokenRequired);
+      return;
+    }
     const result = await checkRepoAccess(repo.trim(), githubToken.trim());
     setRepoCheck(result);
     setNotice(result.message);
@@ -120,7 +126,7 @@ export default function App() {
     try {
       await handleSaveSettings();
       await runBootstrap(repo.trim(), branch.trim() || "main", githubToken.trim());
-      setNotice("Bootstrap finished.");
+      setNotice(t.settings.bootstrapFinished);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : String(error));
     } finally {
@@ -138,16 +144,16 @@ export default function App() {
 
   const handleRunUpload = async () => {
     if (!selectedProfile) {
-      setNotice("Select a profile before uploading.");
+      setNotice(t.upload.selectProfileRequired);
       return;
     }
     if (!ipaPath.trim()) {
-      setNotice("Select an IPA path before uploading.");
+      setNotice(t.upload.selectIpaRequired);
       return;
     }
     const profile = profiles.find((item) => item.name === selectedProfile);
     if (!profile?.p8_path || !profile.issuer_id || !profile.key_id) {
-      setNotice("Selected profile is incomplete.");
+      setNotice(t.upload.incompleteProfile);
       return;
     }
 
@@ -177,14 +183,14 @@ export default function App() {
         profile: parsed.profile || selectedProfile,
         releaseTag: parsed.releaseTag || null,
         workflowUrl: parsed.workflowUrl || latest?.htmlUrl || null,
-        status: latest?.status || "queued",
+        status: latest?.status || t.status.queued,
         conclusion: latest?.conclusion || null,
         createdAt: latest?.createdAt || null,
       };
 
       setRecentRun(nextRun);
       await persistAppConfig({ lastRun: nextRun });
-      setNotice("Upload triggered successfully.");
+      setNotice(t.upload.uploadSuccess);
     } catch (error) {
       setNotice(error instanceof Error ? error.message : String(error));
     } finally {
@@ -201,21 +207,38 @@ export default function App() {
 
   const tabs = useMemo(
     () => [
-      { id: "settings" as const, label: "Settings" },
-      { id: "upload" as const, label: "Upload" },
+      { id: "settings" as const, label: t.app.settingsTab },
+      { id: "upload" as const, label: t.app.uploadTab },
     ],
-    [],
+    [t],
   );
 
   return (
     <div className="shell">
       <aside className="sidebar">
         <div>
-          <p className="eyebrow">Desktop wrapper</p>
-          <h1>AppStore DIS</h1>
-          <p className="muted">
-            Thin UI over the existing upload scripts and GitHub Actions workflow.
-          </p>
+          <p className="eyebrow">{t.app.desktopWrapper}</p>
+          <h1>{t.app.title}</h1>
+          <p className="muted">{t.app.subtitle}</p>
+        </div>
+        <div className="language-switcher">
+          <span>{t.app.language}</span>
+          <div className="language-actions">
+            <button
+              type="button"
+              className={locale === "en" ? "tab active compact" : "tab compact"}
+              onClick={() => setLocale("en")}
+            >
+              {t.app.english}
+            </button>
+            <button
+              type="button"
+              className={locale === "zh" ? "tab active compact" : "tab compact"}
+              onClick={() => setLocale("zh")}
+            >
+              {t.app.chinese}
+            </button>
+          </div>
         </div>
         <nav className="nav">
           {tabs.map((tab) => (
@@ -231,9 +254,9 @@ export default function App() {
         </nav>
         <div className="sidebar-meta">
           <span className={`status-badge ${busy ? "running" : "idle"}`}>
-            {busy ? "Busy" : "Ready"}
+            {busy ? t.app.busy : t.app.ready}
           </span>
-          <p>{notice || "Configure repo settings, then trigger uploads."}</p>
+          <p>{notice || t.app.idleHint}</p>
         </div>
       </aside>
 

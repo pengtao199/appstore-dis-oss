@@ -1,6 +1,7 @@
 import { useMemo } from "react";
 import { OutputPanel } from "../components/OutputPanel";
 import { StatusCard } from "../components/StatusCard";
+import { useI18n } from "../i18n/I18nProvider";
 import type { Profile, RecentRun } from "../lib/types";
 
 type Props = {
@@ -42,6 +43,7 @@ export function UploadPage({
   onRunUpload,
   onOpenWorkflow,
 }: Props) {
+  const { t } = useI18n();
   const selected = useMemo(
     () => profiles.find((profile) => profile.name === selectedProfile),
     [profiles, selectedProfile],
@@ -52,18 +54,18 @@ export function UploadPage({
       <section className="panel">
         <div className="section-header">
           <div>
-            <p className="eyebrow">Upload</p>
-            <h3>Trigger GitHub Action</h3>
+            <p className="eyebrow">{t.upload.eyebrow}</p>
+            <h3>{t.upload.title}</h3>
           </div>
         </div>
         <div className="grid two">
           <label>
-            <span>Profile</span>
+            <span>{t.upload.profile}</span>
             <select
               value={selectedProfile}
               onChange={(event) => onProfileChange(event.target.value)}
             >
-              <option value="">Select a profile</option>
+              <option value="">{t.common.selectProfile}</option>
               {profiles.map((profile) => (
                 <option key={profile.name} value={profile.name}>
                   {profile.name}
@@ -72,44 +74,48 @@ export function UploadPage({
             </select>
           </label>
           <label>
-            <span>Selected email</span>
-            <input value={selected?.email || ""} readOnly placeholder="Profile email" />
+            <span>{t.upload.selectedEmail}</span>
+            <input
+              value={selected?.email || ""}
+              readOnly
+              placeholder={t.upload.selectedEmailPlaceholder}
+            />
           </label>
         </div>
         <label>
-          <span>IPA path</span>
+          <span>{t.upload.ipaPath}</span>
           <div className="inline-field">
             <input
               value={ipaPath}
               onChange={(event) => onIpaPathChange(event.target.value)}
-              placeholder="/absolute/path/app.ipa"
+              placeholder={t.upload.ipaPlaceholder}
             />
             <button type="button" className="secondary" onClick={() => void onPickIpa()}>
-              Choose
+              {t.common.choose}
             </button>
           </div>
         </label>
         <div className="grid two">
           <label>
-            <span>Repo override</span>
+            <span>{t.upload.repoOverride}</span>
             <input
               value={repoOverride}
               onChange={(event) => onRepoOverrideChange(event.target.value)}
-              placeholder={repoFallback || "owner/repo"}
+              placeholder={repoFallback || t.settings.repoPlaceholder}
             />
           </label>
           <label>
-            <span>Branch override</span>
+            <span>{t.upload.branchOverride}</span>
             <input
               value={branchOverride}
               onChange={(event) => onBranchOverrideChange(event.target.value)}
-              placeholder={branchFallback || "main"}
+              placeholder={branchFallback || t.settings.branchPlaceholder}
             />
           </label>
         </div>
         <div className="actions">
           <button type="button" onClick={() => void onRunUpload()} disabled={busy}>
-            Start upload
+            {t.upload.startUpload}
           </button>
         </div>
       </section>
