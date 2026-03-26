@@ -41,7 +41,7 @@ struct WorkflowRunsResponse {
     workflow_runs: Vec<WorkflowRun>,
 }
 
-fn client(token: &str) -> Result<reqwest::Client, String> {
+fn client(_token: &str) -> Result<reqwest::Client, String> {
     reqwest::Client::builder()
         .build()
         .map_err(|err| err.to_string())
