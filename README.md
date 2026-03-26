@@ -18,46 +18,137 @@
 4. 云端执行 `xcrun altool --upload-app`
 5. 无论成功失败都删除临时 Release 与 tag
 
-## Quick Start
+## Before You Start
 
-1. Fork/clone 本模板。
-2. 在 GitHub 上创建你自己的 **private repo**，并推送代码。
-3. 启用 Actions（仓库 Settings -> Actions）。
-4. 先执行一键初始化：
+你需要先准备好：
+
+- 一个 GitHub 账号
+- 一个你自己创建的 **private repo**
+- 一个 GitHub Personal Access Token
+- Apple 上传资料：`.ipa`、`AuthKey.p8`、`Issuer ID`、`Key ID`
+
+GitHub token 建议至少包含这些权限：
+
+- `repo`
+- `workflow`
+
+## macOS Beginner Guide
+
+### 1. 安装本地工具
+
+确保本机可用：
+
+- `git`
+- `bash`
+- `curl`
+- `jq`
+
+如果没有 `jq`，可用 Homebrew 安装：
+
+```bash
+brew install jq
+```
+
+### 2. 克隆公开仓库
+
+```bash
+git clone https://github.com/your-org/appstore-dis-oss.git
+cd appstore-dis-oss
+```
+
+### 3. 在 GitHub 创建你自己的私有仓库
+
+例如：`yourname/ios-upload-private`
+
+### 4. 把本地仓库推到你的私有仓库
+
+```bash
+git remote remove origin
+git remote add origin https://github.com/yourname/ios-upload-private.git
+git branch -M main
+git push -u origin main
+```
+
+如果 `git push` 时要求认证：
+
+- 用户名：填你的 GitHub 用户名
+- 密码：填你的 GitHub Personal Access Token，不是 GitHub 登录密码
+
+### 5. 启用私有仓库的 Actions
+
+GitHub 页面路径：
+
+```text
+Settings -> Actions
+```
+
+### 6. 在本地设置 GitHub token
+
+```bash
+export GH_TOKEN="your_github_token"
+```
+
+如果你想长期生效，可以写进 shell 配置文件，例如 `~/.zshrc`。
+
+### 7. 初始化本地配置
 
 ```bash
 chmod +x bootstrap.sh deploy.sh
 ./bootstrap.sh
 ```
 
-5. 再执行上传（首次推荐交互模式）：
+也可以手动指定仓库和分支：
+
+```bash
+./bootstrap.sh --repo yourname/ios-upload-private --branch main
+```
+
+### 8. 首次上传
 
 ```bash
 ./deploy.sh
 ```
 
-首次会引导你输入：
+首次会提示你输入：
 
 - 开发者邮箱
-- Issuer ID
-- Key ID
-- `.p8` 文件路径（可拖入终端）
+- `Issuer ID`
+- `Key ID`
+- `.p8` 文件路径
+- `.ipa` 文件路径
 
-然后拖入 IPA 路径并回车即可。
+### 9. 后续直接上传
+
+```bash
+./deploy.sh --profile dev_a /absolute/path/app.ipa
+```
+
+### 10. 只检查配置
+
+```bash
+./deploy.sh --profile dev_a /absolute/path/app.ipa --check
+```
 
 ## Windows (PowerShell)
 
 Windows 用户现在可以直接使用 PowerShell，不需要 WSL。
 
-1. 安装 Git for Windows，并确保 `git` 可用。
-2. 克隆这个公开仓库：
+### 1. 安装本地工具
+
+安装 [Git for Windows](https://git-scm.com/download/win)，并确保 `git` 可用。
+
+### 2. 克隆这个公开仓库
 
 ```powershell
 git clone https://github.com/your-org/appstore-dis-oss.git
 cd appstore-dis-oss
 ```
 
-3. 在 GitHub 新建你自己的空私有仓库，然后把本地仓库推送过去：
+### 3. 在 GitHub 新建你自己的空私有仓库
+
+例如：`yourname/ios-upload-private`
+
+### 4. 把本地仓库推送到你的私有仓库
 
 ```powershell
 git remote remove origin
@@ -66,19 +157,30 @@ git branch -M main
 git push -u origin main
 ```
 
-4. 到你的私有仓库页面启用 Actions：
+如果 `git push` 时要求认证：
+
+- 用户名：填你的 GitHub 用户名
+- 密码：填你的 GitHub Personal Access Token，不是 GitHub 登录密码
+
+### 5. 到你的私有仓库页面启用 Actions
 
 ```text
 Settings -> Actions
 ```
 
-5. 建议在 PowerShell 中设置 GitHub token：
+推送完成后，你的私有仓库里会自动包含：
+
+- 代码
+- PowerShell 脚本
+- GitHub Actions 工作流 `.github/workflows/upload.yml`
+
+### 6. 在 PowerShell 中设置 GitHub token
 
 ```powershell
 $env:GH_TOKEN = "your_github_token"
 ```
 
-6. 初始化私有仓库配置：
+### 7. 初始化私有仓库配置
 
 ```powershell
 .\bootstrap.ps1
@@ -90,7 +192,7 @@ $env:GH_TOKEN = "your_github_token"
 .\bootstrap.ps1 -Repo your-org/your-private-repo -Branch main
 ```
 
-7. 执行上传：
+### 8. 首次上传
 
 ```powershell
 .\deploy.ps1
@@ -104,10 +206,15 @@ $env:GH_TOKEN = "your_github_token"
 - `.p8` 文件路径
 - `.ipa` 文件路径
 
-8. 也支持非交互方式：
+### 9. 后续直接上传
 
 ```powershell
 .\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa
+```
+
+### 10. 手动指定仓库或只检查配置
+
+```powershell
 .\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa -Repo your-org/your-private-repo -Branch main
 .\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa -Check
 ```
@@ -115,48 +222,22 @@ $env:GH_TOKEN = "your_github_token"
 ## Common commands
 
 ```bash
-# 首次初始化（自动写入当前 origin 到 profiles/settings.env）
 ./bootstrap.sh
-
-# 手动指定私有仓库
 ./bootstrap.sh --repo your-org/your-private-repo --branch main
-
-# 交互式向导
 ./deploy.sh
-
-# 列出 profile
 ./deploy.sh --list-profiles
-
-# 指定 profile 上传
 ./deploy.sh --profile dev_a /absolute/path/app.ipa
-
-# 指定仓库/分支
 ./deploy.sh --profile dev_a /absolute/path/app.ipa --repo your-org/your-private-repo --branch main
-
-# 仅检查本地依赖与参数
 ./deploy.sh --profile dev_a /absolute/path/app.ipa --check
 ```
 
 ```powershell
-# 首次初始化（自动写入当前 origin 到 profiles/settings.env）
 .\bootstrap.ps1
-
-# 手动指定私有仓库
 .\bootstrap.ps1 -Repo your-org/your-private-repo -Branch main
-
-# 交互式向导
 .\deploy.ps1
-
-# 列出 profile
 .\deploy.ps1 -ListProfiles
-
-# 指定 profile 上传
 .\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa
-
-# 指定仓库/分支
 .\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa -Repo your-org/your-private-repo -Branch main
-
-# 仅检查本地依赖与参数
 .\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa -Check
 ```
 
