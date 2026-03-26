@@ -18,6 +18,44 @@
 4. 云端执行 `xcrun altool --upload-app`
 5. 无论成功失败都删除临时 Release 与 tag
 
+## Desktop App
+
+仓库现在包含一个桌面端封装工程：[`desktop/`](/Users/sk/Documents/appstore-dis-oss/desktop)
+
+设计原则：
+
+- 不改现有上传链路
+- 继续复用 `deploy.sh` / `deploy.ps1` / `bootstrap.sh` / `bootstrap.ps1`
+- 桌面端只负责图形界面、配置保存、脚本调用、输出展示和最近任务状态
+
+桌面端当前包含：
+
+- 设置页：配置 GitHub 仓库、分支、token、Apple profiles
+- 上传页：选择 profile、选择 IPA、触发上传、查看脚本输出
+- Tauri bridge：读写现有 `profiles/accounts.json` 和 `profiles/settings.env`
+
+### Desktop Dev
+
+前端依赖：
+
+```bash
+cd desktop
+npm install
+npm run build
+```
+
+如果要真正运行 Tauri 桌面壳，还需要本机先安装 Rust toolchain，因为当前仓库只完成了 `desktop/src-tauri` 工程代码，未在这个环境里执行过 `tauri dev`：
+
+- `rustc`
+- `cargo`
+
+安装完 Rust 后，可以继续尝试：
+
+```bash
+cd desktop
+npm run tauri:dev
+```
+
 ## Before You Start
 
 你需要先准备好：

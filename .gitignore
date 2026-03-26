@@ -1,3 +1,6 @@
 .DS_Store
 profiles/accounts.json
 profiles/settings.env
+desktop/node_modules
+desktop/dist
+desktop/src-tauri/target
