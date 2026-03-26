@@ -45,6 +45,73 @@ chmod +x bootstrap.sh deploy.sh
 
 然后拖入 IPA 路径并回车即可。
 
+## Windows (PowerShell)
+
+Windows 用户现在可以直接使用 PowerShell，不需要 WSL。
+
+1. 安装 Git for Windows，并确保 `git` 可用。
+2. 克隆这个公开仓库：
+
+```powershell
+git clone https://github.com/your-org/appstore-dis-oss.git
+cd appstore-dis-oss
+```
+
+3. 在 GitHub 新建你自己的空私有仓库，然后把本地仓库推送过去：
+
+```powershell
+git remote remove origin
+git remote add origin https://github.com/yourname/your-private-repo.git
+git branch -M main
+git push -u origin main
+```
+
+4. 到你的私有仓库页面启用 Actions：
+
+```text
+Settings -> Actions
+```
+
+5. 建议在 PowerShell 中设置 GitHub token：
+
+```powershell
+$env:GH_TOKEN = "your_github_token"
+```
+
+6. 初始化私有仓库配置：
+
+```powershell
+.\bootstrap.ps1
+```
+
+或手动指定：
+
+```powershell
+.\bootstrap.ps1 -Repo your-org/your-private-repo -Branch main
+```
+
+7. 执行上传：
+
+```powershell
+.\deploy.ps1
+```
+
+首次会提示输入：
+
+- 开发者邮箱
+- `Issuer ID`
+- `Key ID`
+- `.p8` 文件路径
+- `.ipa` 文件路径
+
+8. 也支持非交互方式：
+
+```powershell
+.\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa
+.\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa -Repo your-org/your-private-repo -Branch main
+.\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa -Check
+```
+
 ## Common commands
 
 ```bash
@@ -70,16 +137,43 @@ chmod +x bootstrap.sh deploy.sh
 ./deploy.sh --profile dev_a /absolute/path/app.ipa --check
 ```
 
+```powershell
+# 首次初始化（自动写入当前 origin 到 profiles/settings.env）
+.\bootstrap.ps1
+
+# 手动指定私有仓库
+.\bootstrap.ps1 -Repo your-org/your-private-repo -Branch main
+
+# 交互式向导
+.\deploy.ps1
+
+# 列出 profile
+.\deploy.ps1 -ListProfiles
+
+# 指定 profile 上传
+.\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa
+
+# 指定仓库/分支
+.\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa -Repo your-org/your-private-repo -Branch main
+
+# 仅检查本地依赖与参数
+.\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa -Check
+```
+
 ## Local files
 
 - `profiles/accounts.json`：本地账户配置（已在 `.gitignore`）
 - `profiles/settings.env`：默认仓库/分支（已在 `.gitignore`）
 - `profiles/example.env`：配置示例
 - `bootstrap.sh`：私有化后的首次初始化脚本
+- `bootstrap.ps1`：Windows PowerShell 初始化脚本
+- `deploy.ps1`：Windows PowerShell 上传脚本
 
 ## Authentication
 
 `deploy.sh` 优先使用 `GH_TOKEN`。若未设置，会尝试读取本机 git credential。
+
+`deploy.ps1` 也优先使用 `GH_TOKEN`。若未设置，会尝试读取本机 git credential。
 
 建议使用具备以下权限的 token：
 
