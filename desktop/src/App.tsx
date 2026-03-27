@@ -310,6 +310,7 @@ export default function App() {
             busy={busy}
             outputLines={outputLines}
             recentRun={recentRun}
+            onGoToSettings={() => setActiveTab("settings")}
             onProfileChange={setSelectedProfile}
             onIpaPathChange={setIpaPath}
             onRepoOverrideChange={setRepoOverride}
