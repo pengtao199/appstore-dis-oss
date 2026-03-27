@@ -4,9 +4,21 @@
 
 1. 克隆这套脚本与 workflow
 2. 新建自己的私有仓库
-3. 直接上传 IPA 到 App Store Connect
+3. 通过桌面端把 IPA 上传到 App Store Connect
 
-> 注意：实际运行仓库必须是 **Private**。
+> 注意：实际运行仓库必须是 **Private**，桌面端会把最小运行集同步到这个私有仓库。
+
+## Recommended User Path
+
+普通用户建议这样使用：
+
+1. 克隆这个公开模板仓库到本地
+2. 创建一个你自己的 GitHub 私有仓库
+3. 打开桌面端，在设置页填写私有仓库、分支和 token
+4. 在桌面端里点击“初始化仓库”
+5. 添加 Apple profile 并开始上传
+
+CLI 现在主要保留给兼容、调试和高级用法。
 
 ## What it does
 
@@ -17,6 +29,14 @@
 3. 触发 GitHub Actions `upload.yml`
 4. 云端执行 `xcrun altool --upload-app`
 5. 无论成功失败都删除临时 Release 与 tag
+
+桌面端“初始化仓库”现在默认同步的是最小运行集，而不是整个公开模板仓库。默认会包含：
+
+- `.github/workflows/upload.yml`
+- `scripts/`
+- `profiles/example.env`
+- `.gitignore`
+- 最小 README
 
 ## Desktop App
 

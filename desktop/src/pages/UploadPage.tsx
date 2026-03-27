@@ -48,6 +48,9 @@ export function UploadPage({
     () => profiles.find((profile) => profile.name === selectedProfile),
     [profiles, selectedProfile],
   );
+  const hasProfile = !!selectedProfile;
+  const hasIpa = !!ipaPath.trim();
+  const usingOverrides = !!repoOverride.trim() || !!branchOverride.trim();
 
   return (
     <div className="page-grid upload-layout">
@@ -117,6 +120,33 @@ export function UploadPage({
           <button type="button" onClick={() => void onRunUpload()} disabled={busy}>
             {t.upload.startUpload}
           </button>
+        </div>
+      </section>
+
+      <section className="panel guide-panel">
+        <div className="section-header">
+          <div>
+            <p className="eyebrow">{t.upload.guideEyebrow}</p>
+            <h3>{t.upload.guideTitle}</h3>
+          </div>
+        </div>
+        <div className="guide-list">
+          <div className={`guide-item ${hasProfile ? "done" : ""}`}>
+            <strong>1</strong>
+            <p>{t.upload.stepProfile}</p>
+          </div>
+          <div className={`guide-item ${hasIpa ? "done" : ""}`}>
+            <strong>2</strong>
+            <p>{t.upload.stepIpa}</p>
+          </div>
+          <div className={`guide-item ${!usingOverrides ? "done" : ""}`}>
+            <strong>3</strong>
+            <p>{t.upload.stepOverride}</p>
+          </div>
+          <div className={`guide-item ${hasProfile && hasIpa ? "done" : ""}`}>
+            <strong>4</strong>
+            <p>{t.upload.stepRun}</p>
+          </div>
         </div>
       </section>
 

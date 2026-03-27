@@ -49,6 +49,8 @@ export function SettingsPage({
   const { t } = useI18n();
   const [draft, setDraft] = useState<Profile>(emptyProfile);
   const [editingName, setEditingName] = useState<string | null>(null);
+  const hasRepoConfig = !!repo.trim() && !!branch.trim() && !!githubToken.trim();
+  const hasProfiles = profiles.length > 0;
 
   const resetEditor = () => {
     setDraft(emptyProfile());
@@ -106,6 +108,33 @@ export function SettingsPage({
 
   return (
     <div className="page-grid">
+      <section className="panel guide-panel">
+        <div className="section-header">
+          <div>
+            <p className="eyebrow">{t.settings.guideEyebrow}</p>
+            <h3>{t.settings.guideTitle}</h3>
+          </div>
+        </div>
+        <div className="guide-list">
+          <div className={`guide-item ${hasRepoConfig ? "done" : ""}`}>
+            <strong>1</strong>
+            <p>{t.settings.stepRepo}</p>
+          </div>
+          <div className={`guide-item ${repoCheck?.ok ? "done" : ""}`}>
+            <strong>2</strong>
+            <p>{t.settings.stepCheck}</p>
+          </div>
+          <div className={`guide-item ${repoCheck?.ok ? "done" : ""}`}>
+            <strong>3</strong>
+            <p>{t.settings.stepInit}</p>
+          </div>
+          <div className={`guide-item ${hasProfiles ? "done" : ""}`}>
+            <strong>4</strong>
+            <p>{t.settings.stepProfile}</p>
+          </div>
+        </div>
+      </section>
+
       <section className="panel">
         <div className="section-header">
           <div>
@@ -195,6 +224,9 @@ export function SettingsPage({
             ))
           )}
         </div>
+        <p className="muted profile-count">
+          {t.settings.profileCount.replace("{count}", String(profiles.length))}
+        </p>
       </section>
 
       <ProfileEditor

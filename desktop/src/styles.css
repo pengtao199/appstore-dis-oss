@@ -149,6 +149,12 @@ select {
   backdrop-filter: blur(14px);
 }
 
+.guide-panel {
+  background:
+    linear-gradient(180deg, rgba(216, 125, 72, 0.12), rgba(14, 20, 28, 0.82) 55%),
+    rgba(14, 20, 28, 0.82);
+}
+
 .section-header {
   display: flex;
   align-items: center;
@@ -232,6 +238,46 @@ label span,
 .profile-list {
   display: grid;
   gap: 0.9rem;
+}
+
+.guide-list {
+  display: grid;
+  gap: 0.85rem;
+}
+
+.guide-item {
+  display: grid;
+  grid-template-columns: 2rem 1fr;
+  gap: 0.85rem;
+  align-items: start;
+  padding: 0.9rem 1rem;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.guide-item strong {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #ffd3b6;
+}
+
+.guide-item.done {
+  border-color: rgba(92, 190, 125, 0.32);
+  background: rgba(92, 190, 125, 0.1);
+}
+
+.guide-item.done strong {
+  background: rgba(92, 190, 125, 0.22);
+  color: #d6f5de;
+}
+
+.profile-count {
+  margin-top: 1rem;
 }
 
 .profile-card {
