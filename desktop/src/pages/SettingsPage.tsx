@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { OutputPanel } from "../components/OutputPanel";
 import { ProfileEditor } from "../components/ProfileEditor";
 import { useI18n } from "../i18n/I18nProvider";
 import { pickFile } from "../lib/api";
@@ -11,6 +12,7 @@ type Props = {
   profiles: Profile[];
   repoCheck: RepoCheckResult | null;
   busy: boolean;
+  outputLines: string[];
   onRepoChange: (value: string) => void;
   onBranchChange: (value: string) => void;
   onTokenChange: (value: string) => void;
@@ -35,6 +37,7 @@ export function SettingsPage({
   profiles,
   repoCheck,
   busy,
+  outputLines,
   onRepoChange,
   onBranchChange,
   onTokenChange,
@@ -202,6 +205,7 @@ export function SettingsPage({
         onCancel={resetEditor}
         editingName={editingName}
       />
+      <OutputPanel lines={outputLines} busy={busy} />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 use reqwest::header::{ACCEPT, AUTHORIZATION, USER_AGENT};
 use serde::{Deserialize, Serialize};
 
-use crate::config::workflow_path;
+use crate::config::{normalize_repo_input, workflow_path};
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -48,6 +48,19 @@ fn client(_token: &str) -> Result<reqwest::Client, String> {
 }
 
 pub async fn check_repo_access(repo: &str, token: &str) -> Result<RepoCheckResult, String> {
+    let normalized_repo = match normalize_repo_input(repo) {
+        Ok(value) => value,
+        Err(message) => {
+            return Ok(RepoCheckResult {
+                ok: false,
+                private: false,
+                has_workflow: false,
+                actions_url: None,
+                message,
+            })
+        }
+    };
+
     if token.trim().is_empty() {
         return Ok(RepoCheckResult {
             ok: false,
@@ -58,19 +71,9 @@ pub async fn check_repo_access(repo: &str, token: &str) -> Result<RepoCheckResul
         });
     }
 
-    if repo.trim().is_empty() {
-        return Ok(RepoCheckResult {
-            ok: false,
-            private: false,
-            has_workflow: false,
-            actions_url: None,
-            message: "Repository is required".to_string(),
-        });
-    }
-
     let client = client(token)?;
     let response = client
-        .get(format!("https://api.github.com/repos/{repo}"))
+        .get(format!("https://api.github.com/repos/{normalized_repo}"))
         .header(USER_AGENT, "appstore-disktop")
         .header(ACCEPT, "application/vnd.github+json")
         .header(AUTHORIZATION, format!("Bearer {token}"))
@@ -83,7 +86,7 @@ pub async fn check_repo_access(repo: &str, token: &str) -> Result<RepoCheckResul
             ok: false,
             private: false,
             has_workflow: workflow_path()?.exists(),
-            actions_url: Some(format!("https://github.com/{repo}/actions")),
+            actions_url: Some(format!("https://github.com/{normalized_repo}/actions")),
             message: "GitHub rejected the request (403). Check repo/workflow token scopes.".to_string(),
         });
     }
@@ -93,7 +96,7 @@ pub async fn check_repo_access(repo: &str, token: &str) -> Result<RepoCheckResul
             ok: false,
             private: false,
             has_workflow: workflow_path()?.exists(),
-            actions_url: Some(format!("https://github.com/{repo}/actions")),
+            actions_url: Some(format!("https://github.com/{normalized_repo}/actions")),
             message: "GitHub token is invalid or expired".to_string(),
         });
     }
@@ -103,7 +106,7 @@ pub async fn check_repo_access(repo: &str, token: &str) -> Result<RepoCheckResul
             ok: false,
             private: false,
             has_workflow: workflow_path()?.exists(),
-            actions_url: Some(format!("https://github.com/{repo}/actions")),
+            actions_url: Some(format!("https://github.com/{normalized_repo}/actions")),
             message: format!("GitHub API returned {}", response.status()),
         });
     }
@@ -144,11 +147,12 @@ pub async fn fetch_recent_run(repo: &str, token: &str) -> Result<Option<RecentRu
     if token.trim().is_empty() || repo.trim().is_empty() {
         return Ok(None);
     }
+    let normalized_repo = normalize_repo_input(repo)?;
 
     let client = client(token)?;
     let response = client
         .get(format!(
-            "https://api.github.com/repos/{repo}/actions/workflows/upload.yml/runs?per_page=1"
+            "https://api.github.com/repos/{normalized_repo}/actions/workflows/upload.yml/runs?per_page=1"
         ))
         .header(USER_AGENT, "appstore-disktop")
         .header(ACCEPT, "application/vnd.github+json")

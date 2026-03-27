@@ -269,6 +269,7 @@ export default function App() {
             profiles={profiles}
             repoCheck={repoCheck}
             busy={busy}
+            outputLines={outputLines}
             onRepoChange={setRepo}
             onBranchChange={setBranch}
             onTokenChange={setGithubToken}

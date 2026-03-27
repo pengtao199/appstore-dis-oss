@@ -77,6 +77,36 @@ pub fn workflow_path() -> Result<PathBuf, String> {
     Ok(repo_root()?.join(".github").join("workflows").join("upload.yml"))
 }
 
+pub fn normalize_repo_input(repo: &str) -> Result<String, String> {
+    let trimmed = repo.trim().trim_end_matches('/').to_string();
+    if trimmed.is_empty() {
+        return Err("repository is empty".to_string());
+    }
+
+    if let Some(value) = trimmed
+        .strip_prefix("https://github.com/")
+        .or_else(|| trimmed.strip_prefix("http://github.com/"))
+    {
+        return Ok(value.trim_end_matches(".git").to_string());
+    }
+
+    if let Some(value) = trimmed
+        .strip_prefix("git@github.com:")
+        .and_then(|value| value.strip_suffix(".git"))
+    {
+        return Ok(value.to_string());
+    }
+
+    Ok(trimmed.trim_end_matches(".git").to_string())
+}
+
+pub fn github_https_url(repo: &str) -> String {
+    format!(
+        "https://github.com/{}.git",
+        repo.trim().trim_end_matches(".git").trim_matches('/')
+    )
+}
+
 pub fn ensure_profiles_storage() -> Result<(), String> {
     let dir = profiles_dir()?;
     if !dir.exists() {

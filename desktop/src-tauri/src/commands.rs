@@ -4,10 +4,10 @@ use tauri::AppHandle;
 
 use crate::config::{
     load_app_config_file, load_script_state_file, save_app_config_file, save_profiles_file,
-    save_settings_file, AppConfig, Profile, ScriptSettings, ScriptState,
+    save_settings_file, normalize_repo_input, AppConfig, Profile, ScriptSettings, ScriptState,
 };
 use crate::github::{check_repo_access as github_check_repo_access, fetch_recent_run as github_fetch_recent_run};
-use crate::scripts::run_command;
+use crate::scripts::{run_bootstrap_with_sync, run_command};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct PlatformInfo {
@@ -28,7 +28,10 @@ pub fn load_script_state() -> Result<ScriptState, String> {
 
 #[tauri::command]
 pub fn save_settings(repo: String, branch: String) -> Result<(), String> {
-    save_settings_file(&ScriptSettings { repo, branch })
+    save_settings_file(&ScriptSettings {
+        repo: normalize_repo_input(&repo)?,
+        branch,
+    })
 }
 
 #[tauri::command]
@@ -63,18 +66,7 @@ pub fn run_bootstrap(
     branch: String,
     github_token: String,
 ) -> Result<(), String> {
-    let (script_name, args) = if cfg!(target_os = "windows") {
-        (
-            ".\\bootstrap.ps1",
-            vec!["-Repo".into(), repo, "-Branch".into(), branch],
-        )
-    } else {
-        (
-            "./bootstrap.sh",
-            vec!["--repo".into(), repo, "--branch".into(), branch],
-        )
-    };
-    run_command(app, script_name, args, github_token)
+    run_bootstrap_with_sync(app, repo, branch, github_token)
 }
 
 #[tauri::command]
@@ -86,6 +78,7 @@ pub fn run_deploy(
     branch: String,
     github_token: String,
 ) -> Result<(), String> {
+    let normalized_repo = normalize_repo_input(&repo)?;
     let args = if cfg!(target_os = "windows") {
         vec![
             "-Profile".into(),
@@ -93,7 +86,7 @@ pub fn run_deploy(
             "-IpaPath".into(),
             ipa_path,
             "-Repo".into(),
-            repo,
+            normalized_repo,
             "-Branch".into(),
             branch,
         ]
@@ -103,7 +96,7 @@ pub fn run_deploy(
             profile,
             ipa_path,
             "--repo".into(),
-            repo,
+            normalized_repo,
             "--branch".into(),
             branch,
         ]
