@@ -102,9 +102,9 @@ pub fn run_deploy(
         ]
     };
     let script_name = if cfg!(target_os = "windows") {
-        ".\\deploy.ps1"
+        ".\\scripts\\deploy.ps1"
     } else {
-        "./deploy.sh"
+        "./scripts/deploy.sh"
     };
 
     run_command(app, script_name, args, github_token)

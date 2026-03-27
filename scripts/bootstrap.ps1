@@ -6,25 +6,26 @@ param(
 $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ProfilesDir = Join-Path $ScriptDir "profiles"
+$RepoRoot = Split-Path -Parent $ScriptDir
+$ProfilesDir = Join-Path $RepoRoot "profiles"
 $AccountsFile = Join-Path $ProfilesDir "accounts.json"
 $SettingsFile = Join-Path $ProfilesDir "settings.env"
 
 function Show-Usage {
     @"
 Usage:
-  .\bootstrap.ps1 [-Repo owner/repo] [-Branch main]
+  .\scripts\bootstrap.ps1 [-Repo owner/repo] [-Branch main]
 
 Examples:
-  .\bootstrap.ps1
-  .\bootstrap.ps1 -Repo your-org/your-private-repo
-  .\bootstrap.ps1 -Repo your-org/your-private-repo -Branch main
+  .\scripts\bootstrap.ps1
+  .\scripts\bootstrap.ps1 -Repo your-org/your-private-repo
+  .\scripts\bootstrap.ps1 -Repo your-org/your-private-repo -Branch main
 "@
 }
 
 function Get-OriginRepo {
     try {
-        $url = (git -C $ScriptDir config --get remote.origin.url 2>$null)
+        $url = (git -C $RepoRoot config --get remote.origin.url 2>$null)
     } catch {
         $url = $null
     }
@@ -51,7 +52,7 @@ if ($args -contains "-h" -or $args -contains "--help") {
     exit 0
 }
 
-if (-not (Test-Path (Join-Path $ScriptDir ".git"))) {
+if (-not (Test-Path (Join-Path $RepoRoot ".git"))) {
     throw "Please run bootstrap inside a git repository clone."
 }
 
@@ -77,4 +78,4 @@ if (-not (Test-Path $AccountsFile)) {
 Write-Host "Bootstrap completed."
 Write-Host "repo=$Repo"
 Write-Host "branch=$Branch"
-Write-Host "next: run .\deploy.ps1"
+Write-Host "next: run .\scripts\deploy.ps1"

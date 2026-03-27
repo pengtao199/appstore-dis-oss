@@ -7,7 +7,8 @@ set -euo pipefail
 # 3) Trigger GitHub Action for cloud upload
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROFILES_DIR="${SCRIPT_DIR}/profiles"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+PROFILES_DIR="${REPO_ROOT}/profiles"
 ACCOUNTS_FILE="${PROFILES_DIR}/accounts.json"
 SETTINGS_FILE="${PROFILES_DIR}/settings.env"
 
@@ -15,18 +16,18 @@ usage() {
   cat <<'USAGE'
 Usage:
   Interactive wizard (recommended):
-    ./deploy.sh
+    ./scripts/deploy.sh
 
   Profile mode:
-    ./deploy.sh --profile <name> <ipa_path> [--repo <owner/repo>] [--branch <branch>] [--check]
+    ./scripts/deploy.sh --profile <name> <ipa_path> [--repo <owner/repo>] [--branch <branch>] [--check]
 
   Helpers:
-    ./deploy.sh --list-profiles
+    ./scripts/deploy.sh --list-profiles
 
 Examples:
-  ./deploy.sh
-  ./deploy.sh --profile dev_a ./build/app.ipa
-  ./deploy.sh --profile dev_b ./build/app.ipa --repo your-org/your-private-repo --branch main --check
+  ./scripts/deploy.sh
+  ./scripts/deploy.sh --profile dev_a ./build/app.ipa
+  ./scripts/deploy.sh --profile dev_b ./build/app.ipa --repo your-org/your-private-repo --branch main --check
 USAGE
 }
 
@@ -90,7 +91,7 @@ ensure_storage() {
 
 infer_repo_from_git_remote() {
   local url path
-  url="$(git -C "$SCRIPT_DIR" config --get remote.origin.url 2>/dev/null || true)"
+  url="$(git -C "$REPO_ROOT" config --get remote.origin.url 2>/dev/null || true)"
 
   if [[ "$url" =~ ^git@github\.com:(.+)\.git$ ]]; then
     printf '%s' "${BASH_REMATCH[1]}"
@@ -160,7 +161,7 @@ list_profiles() {
   count="$(jq -r '.accounts | length' "$ACCOUNTS_FILE")"
 
   if [[ "$count" -eq 0 ]]; then
-    echo "No profile found. Run ./deploy.sh to create one."
+    echo "No profile found. Run ./scripts/deploy.sh to create one."
     return 0
   fi
 
@@ -509,7 +510,7 @@ if [[ -z "$PROFILE" && ${#POSITIONAL[@]} -eq 0 ]]; then
   choose_account_interactive
   IPA_PATH="$(prompt_ipa_interactive)"
 else
-  [[ -n "$PROFILE" ]] || die "missing required option: --profile <name> (or run ./deploy.sh for interactive mode)"
+  [[ -n "$PROFILE" ]] || die "missing required option: --profile <name> (or run ./scripts/deploy.sh for interactive mode)"
   (( ${#POSITIONAL[@]} >= 1 )) || die "profile mode requires <ipa_path>"
   IPA_PATH="$(normalize_local_path "${POSITIONAL[0]}")"
   [[ -n "$IPA_PATH" ]] || die "ipa path is empty"

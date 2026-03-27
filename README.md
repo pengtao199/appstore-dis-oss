@@ -10,7 +10,7 @@
 
 ## What it does
 
-`deploy.sh` 会执行以下流程：
+`scripts/deploy.sh` 会执行以下流程：
 
 1. 本地创建临时 GitHub Release
 2. 上传 `package.ipa`、`AuthKey.p8`、`issuer_id.txt`、`key_id.txt`
@@ -25,7 +25,7 @@
 设计原则：
 
 - 不改现有上传链路
-- 继续复用 `deploy.sh` / `deploy.ps1` / `bootstrap.sh` / `bootstrap.ps1`
+- 继续复用 `scripts/deploy.sh` / `scripts/deploy.ps1` / `scripts/bootstrap.sh` / `scripts/bootstrap.ps1`
 - 桌面端只负责图形界面、配置保存、脚本调用、输出展示和最近任务状态
 
 桌面端当前包含：
@@ -33,6 +33,18 @@
 - 设置页：配置 GitHub 仓库、分支、token、Apple profiles
 - 上传页：选择 profile、选择 IPA、触发上传、查看脚本输出
 - Tauri bridge：读写现有 `profiles/accounts.json` 和 `profiles/settings.env`
+
+### Desktop Quick Start
+
+推荐普通用户直接从桌面端开始：
+
+1. 启动桌面端
+2. 在设置页填写 GitHub repo、branch、token
+3. 测试连接并初始化私有仓库
+4. 添加 Apple profile
+5. 在上传页选择 IPA 并开始上传
+
+完整使用说明见 [user-guide.md](/Users/sk/Documents/appstore-dis-oss/docs/user-guide.md)。
 
 ### Desktop Dev
 
@@ -56,6 +68,32 @@ cd desktop
 npm run tauri:dev
 ```
 
+更多桌面端开发说明见 [desktop-dev.md](/Users/sk/Documents/appstore-dis-oss/docs/desktop-dev.md)。
+
+## Project Structure
+
+```text
+.
+├── .github/workflows/upload.yml
+├── desktop/
+├── docs/
+├── profiles/
+└── scripts/
+```
+
+- `desktop/`：Tauri + React 桌面端
+- `scripts/`：底层 CLI 执行器
+- `profiles/`：本地配置与账户数据
+- `docs/`：开发和使用文档
+
+## Recommended Flow
+
+当前推荐顺序：
+
+1. 优先使用桌面端完成仓库设置、profile 管理和上传
+2. 需要排查问题或批量操作时，再直接使用 `scripts/` 下的 CLI
+3. GitHub Actions 继续作为实际云端上传执行器
+
 ## Before You Start
 
 你需要先准备好：
@@ -70,7 +108,7 @@ GitHub token 建议至少包含这些权限：
 - `repo`
 - `workflow`
 
-## macOS Beginner Guide
+## CLI Guide (macOS / Linux)
 
 ### 1. 安装本地工具
 
@@ -131,20 +169,20 @@ export GH_TOKEN="your_github_token"
 ### 7. 初始化本地配置
 
 ```bash
-chmod +x bootstrap.sh deploy.sh
-./bootstrap.sh
+chmod +x scripts/bootstrap.sh scripts/deploy.sh
+./scripts/bootstrap.sh
 ```
 
 也可以手动指定仓库和分支：
 
 ```bash
-./bootstrap.sh --repo yourname/ios-upload-private --branch main
+./scripts/bootstrap.sh --repo yourname/ios-upload-private --branch main
 ```
 
 ### 8. 首次上传
 
 ```bash
-./deploy.sh
+./scripts/deploy.sh
 ```
 
 首次会提示你输入：
@@ -158,16 +196,16 @@ chmod +x bootstrap.sh deploy.sh
 ### 9. 后续直接上传
 
 ```bash
-./deploy.sh --profile dev_a /absolute/path/app.ipa
+./scripts/deploy.sh --profile dev_a /absolute/path/app.ipa
 ```
 
 ### 10. 只检查配置
 
 ```bash
-./deploy.sh --profile dev_a /absolute/path/app.ipa --check
+./scripts/deploy.sh --profile dev_a /absolute/path/app.ipa --check
 ```
 
-## Windows (PowerShell)
+## CLI Guide (Windows PowerShell)
 
 Windows 用户现在可以直接使用 PowerShell，不需要 WSL。
 
@@ -221,19 +259,19 @@ $env:GH_TOKEN = "your_github_token"
 ### 7. 初始化私有仓库配置
 
 ```powershell
-.\bootstrap.ps1
+.\scripts\bootstrap.ps1
 ```
 
 或手动指定：
 
 ```powershell
-.\bootstrap.ps1 -Repo your-org/your-private-repo -Branch main
+.\scripts\bootstrap.ps1 -Repo your-org/your-private-repo -Branch main
 ```
 
 ### 8. 首次上传
 
 ```powershell
-.\deploy.ps1
+.\scripts\deploy.ps1
 ```
 
 首次会提示输入：
@@ -247,36 +285,36 @@ $env:GH_TOKEN = "your_github_token"
 ### 9. 后续直接上传
 
 ```powershell
-.\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa
+.\scripts\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa
 ```
 
 ### 10. 手动指定仓库或只检查配置
 
 ```powershell
-.\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa -Repo your-org/your-private-repo -Branch main
-.\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa -Check
+.\scripts\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa -Repo your-org/your-private-repo -Branch main
+.\scripts\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa -Check
 ```
 
 ## Common commands
 
 ```bash
-./bootstrap.sh
-./bootstrap.sh --repo your-org/your-private-repo --branch main
-./deploy.sh
-./deploy.sh --list-profiles
-./deploy.sh --profile dev_a /absolute/path/app.ipa
-./deploy.sh --profile dev_a /absolute/path/app.ipa --repo your-org/your-private-repo --branch main
-./deploy.sh --profile dev_a /absolute/path/app.ipa --check
+./scripts/bootstrap.sh
+./scripts/bootstrap.sh --repo your-org/your-private-repo --branch main
+./scripts/deploy.sh
+./scripts/deploy.sh --list-profiles
+./scripts/deploy.sh --profile dev_a /absolute/path/app.ipa
+./scripts/deploy.sh --profile dev_a /absolute/path/app.ipa --repo your-org/your-private-repo --branch main
+./scripts/deploy.sh --profile dev_a /absolute/path/app.ipa --check
 ```
 
 ```powershell
-.\bootstrap.ps1
-.\bootstrap.ps1 -Repo your-org/your-private-repo -Branch main
-.\deploy.ps1
-.\deploy.ps1 -ListProfiles
-.\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa
-.\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa -Repo your-org/your-private-repo -Branch main
-.\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa -Check
+.\scripts\bootstrap.ps1
+.\scripts\bootstrap.ps1 -Repo your-org/your-private-repo -Branch main
+.\scripts\deploy.ps1
+.\scripts\deploy.ps1 -ListProfiles
+.\scripts\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa
+.\scripts\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa -Repo your-org/your-private-repo -Branch main
+.\scripts\deploy.ps1 -Profile dev_a -IpaPath C:\absolute\path\app.ipa -Check
 ```
 
 ## Local files
@@ -284,15 +322,16 @@ $env:GH_TOKEN = "your_github_token"
 - `profiles/accounts.json`：本地账户配置（已在 `.gitignore`）
 - `profiles/settings.env`：默认仓库/分支（已在 `.gitignore`）
 - `profiles/example.env`：配置示例
-- `bootstrap.sh`：私有化后的首次初始化脚本
-- `bootstrap.ps1`：Windows PowerShell 初始化脚本
-- `deploy.ps1`：Windows PowerShell 上传脚本
+- `scripts/bootstrap.sh`：macOS / Linux 初始化脚本
+- `scripts/bootstrap.ps1`：Windows PowerShell 初始化脚本
+- `scripts/deploy.sh`：macOS / Linux 上传脚本
+- `scripts/deploy.ps1`：Windows PowerShell 上传脚本
 
 ## Authentication
 
-`deploy.sh` 优先使用 `GH_TOKEN`。若未设置，会尝试读取本机 git credential。
+`scripts/deploy.sh` 优先使用 `GH_TOKEN`。若未设置，会尝试读取本机 git credential。
 
-`deploy.ps1` 也优先使用 `GH_TOKEN`。若未设置，会尝试读取本机 git credential。
+`scripts/deploy.ps1` 也优先使用 `GH_TOKEN`。若未设置，会尝试读取本机 git credential。
 
 建议使用具备以下权限的 token：
 
@@ -332,8 +371,8 @@ sudo apt install -y bash curl jq git
 2. 按普通 Linux 步骤执行：
 
 ```bash
-./bootstrap.sh
-./deploy.sh
+./scripts/bootstrap.sh
+./scripts/deploy.sh
 ```
 
 3. 路径输入支持两种格式（脚本会自动转换）：

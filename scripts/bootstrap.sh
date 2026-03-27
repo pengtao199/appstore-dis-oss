@@ -2,7 +2,8 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROFILES_DIR="${SCRIPT_DIR}/profiles"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+PROFILES_DIR="${REPO_ROOT}/profiles"
 ACCOUNTS_FILE="${PROFILES_DIR}/accounts.json"
 SETTINGS_FILE="${PROFILES_DIR}/settings.env"
 
@@ -12,12 +13,12 @@ TARGET_BRANCH="main"
 usage() {
   cat <<'USAGE'
 Usage:
-  ./bootstrap.sh [--repo owner/repo] [--branch main]
+  ./scripts/bootstrap.sh [--repo owner/repo] [--branch main]
 
 Examples:
-  ./bootstrap.sh
-  ./bootstrap.sh --repo your-org/your-private-repo
-  ./bootstrap.sh --repo your-org/your-private-repo --branch main
+  ./scripts/bootstrap.sh
+  ./scripts/bootstrap.sh --repo your-org/your-private-repo
+  ./scripts/bootstrap.sh --repo your-org/your-private-repo --branch main
 USAGE
 }
 
@@ -41,7 +42,7 @@ trim_value() {
 
 infer_repo_from_origin() {
   local url path
-  url="$(git -C "$SCRIPT_DIR" config --get remote.origin.url 2>/dev/null || true)"
+  url="$(git -C "$REPO_ROOT" config --get remote.origin.url 2>/dev/null || true)"
   if [[ "$url" =~ ^git@github\.com:(.+)\.git$ ]]; then
     printf '%s' "${BASH_REMATCH[1]}"
     return
@@ -81,7 +82,7 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-if [[ ! -d "$SCRIPT_DIR/.git" ]]; then
+if [[ ! -d "$REPO_ROOT/.git" ]]; then
   die "Please run bootstrap inside a git repository clone."
 fi
 
@@ -110,4 +111,4 @@ chmod +x "$SCRIPT_DIR/deploy.sh" "$SCRIPT_DIR/bootstrap.sh"
 echo "Bootstrap completed."
 echo "repo=$TARGET_REPO"
 echo "branch=$TARGET_BRANCH"
-echo "next: run ./deploy.sh"
+echo "next: run ./scripts/deploy.sh"

@@ -10,7 +10,8 @@ param(
 $ErrorActionPreference = "Stop"
 
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
-$ProfilesDir = Join-Path $ScriptDir "profiles"
+$RepoRoot = Split-Path -Parent $ScriptDir
+$ProfilesDir = Join-Path $RepoRoot "profiles"
 $AccountsFile = Join-Path $ProfilesDir "accounts.json"
 $SettingsFile = Join-Path $ProfilesDir "settings.env"
 
@@ -18,18 +19,18 @@ function Show-Usage {
     @"
 Usage:
   Interactive wizard (recommended):
-    .\deploy.ps1
+    .\scripts\deploy.ps1
 
   Profile mode:
-    .\deploy.ps1 -Profile <name> -IpaPath <ipa_path> [-Repo <owner/repo>] [-Branch <branch>] [-Check]
+    .\scripts\deploy.ps1 -Profile <name> -IpaPath <ipa_path> [-Repo <owner/repo>] [-Branch <branch>] [-Check]
 
   Helpers:
-    .\deploy.ps1 -ListProfiles
+    .\scripts\deploy.ps1 -ListProfiles
 
 Examples:
-  .\deploy.ps1
-  .\deploy.ps1 -Profile dev_a -IpaPath C:\build\app.ipa
-  .\deploy.ps1 -Profile dev_b -IpaPath C:\build\app.ipa -Repo your-org/your-private-repo -Branch main -Check
+  .\scripts\deploy.ps1
+  .\scripts\deploy.ps1 -Profile dev_a -IpaPath C:\build\app.ipa
+  .\scripts\deploy.ps1 -Profile dev_b -IpaPath C:\build\app.ipa -Repo your-org/your-private-repo -Branch main -Check
 "@
 }
 
@@ -71,7 +72,7 @@ function Save-AccountsData($Data) {
 
 function Get-OriginRepo {
     try {
-        $url = (git -C $ScriptDir config --get remote.origin.url 2>$null)
+        $url = (git -C $RepoRoot config --get remote.origin.url 2>$null)
     } catch {
         $url = $null
     }
@@ -428,7 +429,7 @@ if ($ListProfiles) {
     $data = Get-AccountsData
     $accounts = @($data.accounts)
     if ($accounts.Count -eq 0) {
-        Write-Host "No profile found. Run .\deploy.ps1 to create one."
+        Write-Host "No profile found. Run .\scripts\deploy.ps1 to create one."
         exit 0
     }
     Write-Host "Available profiles:"
@@ -447,7 +448,7 @@ if ([string]::IsNullOrWhiteSpace($Profile) -and [string]::IsNullOrWhiteSpace($Ip
     $resolvedIpaPath = Prompt-IpaInteractive
 } else {
     if ([string]::IsNullOrWhiteSpace($Profile)) {
-        throw "missing required option: -Profile <name> (or run .\deploy.ps1 for interactive mode)"
+        throw "missing required option: -Profile <name> (or run .\scripts\deploy.ps1 for interactive mode)"
     }
     if ([string]::IsNullOrWhiteSpace($IpaPath)) {
         throw "profile mode requires -IpaPath <ipa_path>"
