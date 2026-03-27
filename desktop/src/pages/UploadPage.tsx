@@ -48,13 +48,20 @@ export function UploadPage({
     () => profiles.find((profile) => profile.name === selectedProfile),
     [profiles, selectedProfile],
   );
-  const hasProfile = !!selectedProfile;
-  const hasIpa = !!ipaPath.trim();
-  const usingOverrides = !!repoOverride.trim() || !!branchOverride.trim();
+  const showLog = busy || outputLines.length > 0;
 
   return (
-    <div className="page-grid upload-layout">
-      <section className="panel">
+    <div className="page-grid">
+      <header className="page-header">
+        <div>
+          <p className="eyebrow">{t.upload.eyebrow}</p>
+          <h2>{t.upload.title}</h2>
+          <p className="muted page-description">{t.upload.description}</p>
+        </div>
+      </header>
+
+      <div className="upload-layout">
+        <section className="panel">
         <div className="section-header">
           <div>
             <p className="eyebrow">{t.upload.eyebrow}</p>
@@ -116,42 +123,26 @@ export function UploadPage({
             />
           </label>
         </div>
+        <p className="muted section-copy">{t.upload.overrideHint}</p>
         <div className="actions">
           <button type="button" onClick={() => void onRunUpload()} disabled={busy}>
             {t.upload.startUpload}
           </button>
         </div>
-      </section>
+        </section>
 
-      <section className="panel guide-panel">
-        <div className="section-header">
-          <div>
-            <p className="eyebrow">{t.upload.guideEyebrow}</p>
-            <h3>{t.upload.guideTitle}</h3>
-          </div>
-        </div>
-        <div className="guide-list">
-          <div className={`guide-item ${hasProfile ? "done" : ""}`}>
-            <strong>1</strong>
-            <p>{t.upload.stepProfile}</p>
-          </div>
-          <div className={`guide-item ${hasIpa ? "done" : ""}`}>
-            <strong>2</strong>
-            <p>{t.upload.stepIpa}</p>
-          </div>
-          <div className={`guide-item ${!usingOverrides ? "done" : ""}`}>
-            <strong>3</strong>
-            <p>{t.upload.stepOverride}</p>
-          </div>
-          <div className={`guide-item ${hasProfile && hasIpa ? "done" : ""}`}>
-            <strong>4</strong>
-            <p>{t.upload.stepRun}</p>
-          </div>
-        </div>
-      </section>
+        <StatusCard run={recentRun} onOpenWorkflow={() => void onOpenWorkflow()} />
+      </div>
 
-      <StatusCard run={recentRun} onOpenWorkflow={() => void onOpenWorkflow()} />
-      <OutputPanel lines={outputLines} busy={busy} />
+      {showLog ? (
+        <details className="panel details-panel" open={busy}>
+          <summary>
+            <span className="eyebrow">{t.output.eyebrow}</span>
+            <strong>{t.output.title}</strong>
+          </summary>
+          <OutputPanel lines={outputLines} busy={busy} />
+        </details>
+      ) : null}
     </div>
   );
 }

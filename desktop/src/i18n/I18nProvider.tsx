@@ -8,6 +8,8 @@ import {
 } from "react";
 import { messages, type Locale, type MessageTree } from "./messages";
 
+export type { Locale };
+
 type I18nContextValue = {
   locale: Locale;
   setLocale: (locale: Locale) => void;

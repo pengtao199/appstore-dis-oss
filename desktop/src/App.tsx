@@ -26,6 +26,12 @@ import { SettingsPage } from "./pages/SettingsPage";
 import { UploadPage } from "./pages/UploadPage";
 
 type Tab = "settings" | "upload";
+type NoticeKind = "info" | "success" | "error";
+
+type ToastNotice = {
+  message: string;
+  kind: NoticeKind;
+};
 
 export default function App() {
   const { locale, setLocale, t } = useI18n();
@@ -42,7 +48,7 @@ export default function App() {
   const [recentRun, setRecentRun] = useState<RecentRun | null>(null);
   const [outputLines, setOutputLines] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
-  const [notice, setNotice] = useState<string>("");
+  const [notice, setNotice] = useState<ToastNotice | null>(null);
   const outputLinesRef = useRef<string[]>([]);
 
   useEffect(() => {
@@ -79,6 +85,20 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!notice) {
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      setNotice((current) => (current?.message === notice.message ? null : current));
+    }, 2600);
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [notice]);
+
   const effectiveRepo = repoOverride.trim() || repo.trim();
   const effectiveBranch = branchOverride.trim() || branch.trim() || "main";
 
@@ -93,10 +113,14 @@ export default function App() {
     await saveAppConfig(next);
   };
 
+  const showNotice = (message: string, kind: NoticeKind = "info") => {
+    setNotice({ message, kind });
+  };
+
   const handleSaveSettings = async () => {
     await saveSettings(repo.trim(), branch.trim() || "main");
     await persistAppConfig({ githubToken });
-    setNotice(t.settings.settingsSaved);
+    showNotice(t.settings.settingsSaved, "success");
   };
 
   const handleSaveProfiles = async (nextProfiles: Profile[]) => {
@@ -105,30 +129,30 @@ export default function App() {
     if (!selectedProfile && nextProfiles.length > 0) {
       setSelectedProfile(nextProfiles[0].name);
     }
-    setNotice(t.settings.profilesSaved);
+    showNotice(t.settings.profilesSaved, "success");
   };
 
   const handleCheckRepo = async () => {
     if (!repo.trim() || !githubToken.trim()) {
-      setNotice(t.settings.repoTokenRequired);
+      showNotice(t.settings.repoTokenRequired, "error");
       return;
     }
     const result = await checkRepoAccess(repo.trim(), githubToken.trim());
     setRepoCheck(result);
-    setNotice(result.message);
+    showNotice(result.message, result.ok ? "success" : "error");
   };
 
   const handleRunBootstrap = async () => {
     setBusy(true);
     setOutputLines([]);
     outputLinesRef.current = [];
-    setNotice("");
+    setNotice(null);
     try {
       await handleSaveSettings();
       await runBootstrap(repo.trim(), branch.trim() || "main", githubToken.trim());
-      setNotice(t.settings.bootstrapFinished);
+      showNotice(t.settings.bootstrapFinished, "success");
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : String(error));
+      showNotice(error instanceof Error ? error.message : String(error), "error");
     } finally {
       setBusy(false);
     }
@@ -144,23 +168,23 @@ export default function App() {
 
   const handleRunUpload = async () => {
     if (!selectedProfile) {
-      setNotice(t.upload.selectProfileRequired);
+      showNotice(t.upload.selectProfileRequired, "error");
       return;
     }
     if (!ipaPath.trim()) {
-      setNotice(t.upload.selectIpaRequired);
+      showNotice(t.upload.selectIpaRequired, "error");
       return;
     }
     const profile = profiles.find((item) => item.name === selectedProfile);
     if (!profile?.p8_path || !profile.issuer_id || !profile.key_id) {
-      setNotice(t.upload.incompleteProfile);
+      showNotice(t.upload.incompleteProfile, "error");
       return;
     }
 
     setBusy(true);
     setOutputLines([]);
     outputLinesRef.current = [];
-    setNotice("");
+    setNotice(null);
 
     try {
       await persistAppConfig({
@@ -190,9 +214,9 @@ export default function App() {
 
       setRecentRun(nextRun);
       await persistAppConfig({ lastRun: nextRun });
-      setNotice(t.upload.uploadSuccess);
+      showNotice(t.upload.uploadSuccess, "success");
     } catch (error) {
-      setNotice(error instanceof Error ? error.message : String(error));
+      showNotice(error instanceof Error ? error.message : String(error), "error");
     } finally {
       setBusy(false);
     }
@@ -216,30 +240,14 @@ export default function App() {
   return (
     <div className="shell">
       <aside className="sidebar">
-        <div>
-          <p className="eyebrow">{t.app.desktopWrapper}</p>
-          <h1>{t.app.title}</h1>
-          <p className="muted">{t.app.subtitle}</p>
-        </div>
-        <div className="language-switcher">
-          <span>{t.app.language}</span>
-          <div className="language-actions">
-            <button
-              type="button"
-              className={locale === "en" ? "tab active compact" : "tab compact"}
-              onClick={() => setLocale("en")}
-            >
-              {t.app.english}
-            </button>
-            <button
-              type="button"
-              className={locale === "zh" ? "tab active compact" : "tab compact"}
-              onClick={() => setLocale("zh")}
-            >
-              {t.app.chinese}
-            </button>
+        <div className="sidebar-top">
+          <div className="brand-block">
+            <p className="eyebrow">{t.app.desktopWrapper}</p>
+            <h1>{t.app.title}</h1>
+            <p className="muted">{t.app.subtitle}</p>
           </div>
         </div>
+
         <nav className="nav">
           {tabs.map((tab) => (
             <button
@@ -252,15 +260,25 @@ export default function App() {
             </button>
           ))}
         </nav>
+
         <div className="sidebar-meta">
           <span className={`status-badge ${busy ? "running" : "idle"}`}>
             {busy ? t.app.busy : t.app.ready}
           </span>
-          <p>{notice || t.app.idleHint}</p>
+          <p>{t.app.idleHint}</p>
         </div>
       </aside>
 
       <main className="content">
+        {notice ? (
+          <div className={`toast ${notice.kind}`}>
+            <span className={`status-dot ${notice.kind}`} />
+            <p>{notice.message}</p>
+            <button type="button" className="toast-close" onClick={() => setNotice(null)}>
+              ×
+            </button>
+          </div>
+        ) : null}
         {activeTab === "settings" ? (
           <SettingsPage
             repo={repo}
@@ -270,6 +288,8 @@ export default function App() {
             repoCheck={repoCheck}
             busy={busy}
             outputLines={outputLines}
+            locale={locale}
+            onLocaleChange={setLocale}
             onRepoChange={setRepo}
             onBranchChange={setBranch}
             onTokenChange={setGithubToken}

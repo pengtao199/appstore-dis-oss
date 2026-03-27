@@ -70,21 +70,96 @@ select {
 
 .shell {
   display: grid;
-  grid-template-columns: 320px 1fr;
+  grid-template-columns: 296px 1fr;
   min-height: 100vh;
 }
 
 .sidebar {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  gap: 1.2rem;
   padding: 2rem;
   border-right: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(180deg, rgba(12, 19, 28, 0.9), rgba(12, 19, 28, 0.62));
+  background:
+    linear-gradient(180deg, rgba(17, 25, 35, 0.98), rgba(12, 19, 28, 0.84)),
+    rgba(12, 19, 28, 0.84);
 }
 
 .content {
-  padding: 2rem;
+  padding: 1.5rem;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.03), transparent 26%),
+    rgba(9, 14, 20, 0.82);
+  overflow: auto;
+}
+
+.toast {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: 40;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 280px;
+  max-width: 420px;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 16px;
+  background: rgba(15, 22, 31, 0.96);
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  backdrop-filter: blur(16px);
+}
+
+.toast.success {
+  border-color: rgba(92, 190, 125, 0.28);
+}
+
+.toast.error {
+  border-color: rgba(225, 98, 98, 0.3);
+}
+
+.toast.info {
+  border-color: rgba(243, 163, 93, 0.3);
+}
+
+.toast p {
+  flex: 1;
+}
+
+.status-dot {
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.35);
+}
+
+.status-dot.running,
+.status-dot.info {
+  background: #f3a35d;
+}
+
+.status-dot.idle,
+.status-dot.success {
+  background: #6fc08c;
+}
+
+.status-dot.error {
+  background: #e16262;
+}
+
+.toast-close {
+  padding: 0;
+  min-width: auto;
+  background: transparent;
+  color: rgba(247, 244, 237, 0.6);
+  font-size: 1.1rem;
+  line-height: 1;
+}
+
+.toast-close:hover {
+  color: #fff;
+  transform: none;
 }
 
 .nav {
@@ -92,38 +167,41 @@ select {
   gap: 0.75rem;
 }
 
+.sidebar-top {
+  display: grid;
+  gap: 1rem;
+}
+
+.brand-block {
+  display: grid;
+  gap: 0.35rem;
+}
+
 .tab {
   justify-content: flex-start;
   text-align: left;
-  background: rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .tab.active {
   background: linear-gradient(135deg, #e48b48, #b84d6d);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16);
 }
 
 .sidebar-meta {
   display: grid;
   gap: 0.85rem;
   padding: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  margin-top: auto;
+  border: 1px solid rgba(255, 255, 255, 0.06);
   border-radius: 20px;
-  background: rgba(255, 255, 255, 0.04);
-}
-
-.language-switcher {
-  display: grid;
-  gap: 0.6rem;
-  margin-top: 1.5rem;
-}
-
-.language-switcher span {
-  font-size: 0.8rem;
-  color: rgba(247, 244, 237, 0.7);
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .language-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 0.6rem;
 }
 
@@ -137,22 +215,42 @@ select {
 }
 
 .upload-layout {
-  grid-template-columns: 1.15fr 0.85fr;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.85fr);
   align-items: start;
+  gap: 1.25rem;
+}
+
+.settings-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(360px, 1.05fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+.settings-main {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.page-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.page-description,
+.section-copy {
+  margin-top: 0.4rem;
 }
 
 .panel {
   padding: 1.4rem;
   border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 24px;
-  background: rgba(14, 20, 28, 0.82);
+  background: linear-gradient(180deg, rgba(17, 24, 34, 0.92), rgba(11, 17, 25, 0.9));
   backdrop-filter: blur(14px);
-}
-
-.guide-panel {
-  background:
-    linear-gradient(180deg, rgba(216, 125, 72, 0.12), rgba(14, 20, 28, 0.82) 55%),
-    rgba(14, 20, 28, 0.82);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
 }
 
 .section-header {
@@ -212,6 +310,22 @@ label span,
   gap: 0.7rem;
 }
 
+.input-with-action {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.7rem;
+  align-items: end;
+}
+
+.input-with-action input {
+  margin-top: 0;
+}
+
+.inline-action {
+  padding-inline: 1rem;
+  white-space: nowrap;
+}
+
 .actions {
   display: flex;
   flex-wrap: wrap;
@@ -240,42 +354,6 @@ label span,
   gap: 0.9rem;
 }
 
-.guide-list {
-  display: grid;
-  gap: 0.85rem;
-}
-
-.guide-item {
-  display: grid;
-  grid-template-columns: 2rem 1fr;
-  gap: 0.85rem;
-  align-items: start;
-  padding: 0.9rem 1rem;
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.guide-item strong {
-  display: grid;
-  place-items: center;
-  width: 2rem;
-  height: 2rem;
-  border-radius: 999px;
-  background: rgba(255, 255, 255, 0.08);
-  color: #ffd3b6;
-}
-
-.guide-item.done {
-  border-color: rgba(92, 190, 125, 0.32);
-  background: rgba(92, 190, 125, 0.1);
-}
-
-.guide-item.done strong {
-  background: rgba(92, 190, 125, 0.22);
-  color: #d6f5de;
-}
-
 .profile-count {
   margin-top: 1rem;
 }
@@ -300,8 +378,51 @@ label span,
   align-items: center;
 }
 
+.account-panel {
+  display: grid;
+  gap: 1rem;
+}
+
+.profile-editor-wrap {
+  padding-top: 0.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.profile-editor {
+  display: grid;
+  gap: 1rem;
+}
+
+.details-panel {
+  padding: 0;
+  overflow: hidden;
+}
+
+.details-panel summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  list-style: none;
+}
+
+.details-panel summary::-webkit-details-marker {
+  display: none;
+}
+
 .terminal-panel {
   grid-column: 1 / -1;
+}
+
+.details-panel .terminal-panel {
+  margin: 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  border-bottom: 0;
 }
 
 .terminal {
@@ -363,6 +484,7 @@ label span,
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
   }
 
+  .settings-layout,
   .upload-layout,
   .grid.two,
   .status-grid {

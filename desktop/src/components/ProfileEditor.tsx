@@ -21,7 +21,7 @@ export function ProfileEditor({
   const { t } = useI18n();
 
   return (
-    <section className="panel">
+    <section className="profile-editor">
       <div className="section-header">
         <div>
           <p className="eyebrow">
